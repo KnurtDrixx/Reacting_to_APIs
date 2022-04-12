@@ -6,23 +6,34 @@ const App = () => {
   const [allFilms, setAllFilms] = useState([]);
   const [allPeople, setAllPeople] = useState([]);
   const [peopleFromFilms, setPeopleFromFilms] = useState([]);
+  const [filmsFromPeople, setFilmsFromPeople] = useState([]);
   const [filmToggle, setFilmToggle] = useState(false);
   const [peopleToggle, setPeopleToggle] = useState(false);
-  //! const [nothingToggle, setNothingToggle] = useState(false);
+  const [nothingToggle, setNothingToggle] = useState(false);
 
   const handleSetFilmToggle = () => {
     setFilmToggle(!filmToggle);
     setPeopleToggle(false);
+    setNothingToggle(false);
   };
 
   const handleSetPeopleToggle = () => {
     setPeopleToggle(!peopleToggle);
     setFilmToggle(false);
+    setNothingToggle(false);
   };
 
   const handleSetNothingToggle = () => {
     setFilmToggle(false);
     setPeopleToggle(false);
+    setNothingToggle(true);
+  };
+
+  const randomColor = () => {
+    const R = Math.floor(Math.random() * 256);
+    const G = Math.floor(Math.random() * 256);
+    const B = Math.floor(Math.random() * 256);
+    return `rgb(${R}, ${G}, ${B})`;
   };
 
   //! set this up to get the people list  and then reverse it to get what their movies are.
@@ -57,11 +68,37 @@ const App = () => {
           films: personFilms,
         };
         tempPeople.push(tempPerson);
-        console.log(tempPerson);
+        //console.log(tempPerson);
       });
       setPeopleFromFilms(tempPeople);
     }
   }, [allFilms, allPeople]);
+
+  useEffect(() => {
+    if (allPeople.length && allFilms.length) {
+      const tempFilms = [];
+
+      allFilms.forEach((film) => {
+        const filmsPerson = [];
+        film.people.forEach((person) => {
+          const personID = person.slice(-36);
+          allPeople.forEach((person) => {
+            if (person.id === personID) {
+              filmsPerson.push(person);
+            }
+          });
+        });
+
+        const tempFilm = {
+          ...film,
+          people: filmsPerson,
+        };
+        tempFilms.push(tempFilm);
+        //console.log(tempFilm);
+      });
+      setFilmsFromPeople(tempFilms);
+    }
+  }, [allPeople, allFilms]);
 
   //     useEffect(() => {
   //         fetch("https://ghibliapi.herokuapp.com/films")
@@ -96,7 +133,7 @@ const App = () => {
   return (
     <div>
       <h1>This is Studio Ghibli!</h1>
-      <div className="container">
+      <div className="container justify-content-center">
         <button className="btn btn-success" onClick={(e) => handleSetFilmToggle(e)}>
           {filmToggle ? "Hide" : "Show"} Films
         </button>
@@ -112,7 +149,7 @@ const App = () => {
       {peopleToggle && (
         <div>
           {peopleFromFilms.map((person) => (
-            <div key={person.id}>
+            <div key={person.id} style={{ backgroundColor: randomColor() }}>
               <p>{person.name}</p>
               <ul>
                 {person.films.map((film) => (
@@ -125,6 +162,25 @@ const App = () => {
           ))}
         </div>
       )}
+
+      {filmToggle && (
+        <div>
+          {filmsFromPeople.map((film) => (
+            <div key={film.id} style={{ backgroundColor: randomColor() }}>
+              <p>{film.name}</p>
+              <ul>
+                {film.people.map((person) => (
+                  <li key={film.id + "-" + person.id}>
+                    {film.title}, has the character {person.name} of this age {person.age}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!peopleToggle && !filmToggle && nothingToggle && <div>The Best Ghibli Movie is Ervin Howell's Moving Castle</div>}
 
       {/* {!peopleToggle && (people.jsx here)} */}
     </div>
